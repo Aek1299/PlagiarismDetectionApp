@@ -7,5 +7,5 @@ The application menu:
 ![alt text](pictures/menu.jpg "Menu")  
 
 A sample report:  
-![alt text](pictures/report1.JPG "Report") 
-![alt text](pictures/report2.JPG "Report") 
+![alt text](pictures/report1.jpg "Report") 
+![alt text](pictures/report2.jpg "Report") 
