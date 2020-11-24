@@ -22,7 +22,7 @@ public class ExcelWriter {
 
     /**
      * Метод для записи отчета в Excel таблицу.
-     * @param databaseUtils объект для взаимодействия с базой доанныхю
+     * @param databaseUtils объект для взаимодействия с базой доанных.
      * @param task_id идентификатор задания.
      * @param task название задания.
      * @param middleThreshold порог средней схожести программ.
@@ -233,11 +233,24 @@ public class ExcelWriter {
     }
 
 
+    /**
+     * Вспомогательный класс для работы с информацией о студенте.
+     */
+
     public static class Record{
         private final String student;
         private final String completed;
         private final String cluster;
         private final String successfully;
+
+
+        /**
+         * Конструктор для создания записи о студенте.
+         * @param student имя студента.
+         * @param completed выполнено задание студентом или нет.
+         * @param cluster номер кластера.
+         * @param successfully выполнено задание успешно или нет.
+         */
 
         public Record(String student, String completed, String cluster, String successfully) {
             this.student = student;
