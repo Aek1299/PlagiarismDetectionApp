@@ -3,6 +3,7 @@ package com.mycompany.plagiarism.gui;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -27,10 +28,11 @@ public class MainMenu extends JFrame {
 
         Properties properties = new Properties();
         try {
-            properties.load(new FileInputStream("config.properties"));
+            properties.load(new InputStreamReader(new FileInputStream("config.properties"),
+                    StandardCharsets.UTF_8));
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null,"Ошибка загрузки config.properties", "Уведомление об ошибке",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null,"Ошибка загрузки config.properties",
+                    "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             System.exit(1);
         }
@@ -77,7 +79,8 @@ public class MainMenu extends JFrame {
 
         if (flag) {
             try {
-                properties.store(new FileWriter("config.properties"),null);
+                properties.store(new OutputStreamWriter(new FileOutputStream("config.properties"),
+                        StandardCharsets.UTF_8),null);
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null,"Ошибка сохранения config.properties",
                         "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
