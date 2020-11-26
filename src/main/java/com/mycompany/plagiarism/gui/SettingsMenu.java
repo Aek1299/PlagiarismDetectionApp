@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.filechooser.FileFilter;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 /**
@@ -145,8 +146,9 @@ public class SettingsMenu extends JFrame {
             properties.replace("WorkDirectoryURL", labelWorkCur.getText());
             properties.replace("MiddleThreshold", Integer.toString(middleSlider.getValue()));
             properties.replace("HighThreshold", Integer.toString(highSlider.getValue()));
-            try {
-                properties.store(new FileWriter("config.properties"),null);
+            try (FileOutputStream fos = new FileOutputStream("config.properties");
+            OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8)){
+                properties.store(osw,null);
             } catch (IOException ioException) {
                 JOptionPane.showMessageDialog(null,"Ошибка сохранения config.properties",
                         "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);

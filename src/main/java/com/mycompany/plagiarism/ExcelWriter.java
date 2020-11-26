@@ -226,10 +226,9 @@ public class ExcelWriter {
             }
         }
 
-        FileOutputStream out = new FileOutputStream(new File(resultsURL+File.separator+task+".xlsx"));
-        workbook.write(out);
-        out.close();
-
+        try(FileOutputStream out = new FileOutputStream(new File(resultsURL+File.separator+task+".xlsx"))) {
+            workbook.write(out);
+        }
     }
 
 

@@ -22,16 +22,17 @@ public class TriggerAddingTask implements Trigger {
     public void fire(Connection conn, Object[] oldRow, Object[] newRow)
             throws SQLException {
         String querySQL = "SELECT id FROM students;";
-        Statement statement = conn.createStatement();
-        ResultSet resultSet = statement.executeQuery(querySQL);
-        PreparedStatement preparedStatement = conn.prepareStatement("INSERT INTO solutions (student_id, task_id, " +
-                "solution, processed) " +
-                "VALUES (?, ?, NULL, NULL)");
-        preparedStatement.setObject(2, newRow[0]);
-        while(resultSet.next()){
-            int studentId = resultSet.getInt("id");
-            preparedStatement.setInt(1, studentId);
-            preparedStatement.executeUpdate();
+        try(Statement statement = conn.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(querySQL);
+            PreparedStatement preparedStatement = conn.prepareStatement("INSERT INTO solutions (student_id, task_id, " +
+                    "solution, processed) " +
+                    "VALUES (?, ?, NULL, NULL)");
+            preparedStatement.setObject(2, newRow[0]);
+            while (resultSet.next()) {
+                int studentId = resultSet.getInt("id");
+                preparedStatement.setInt(1, studentId);
+                preparedStatement.executeUpdate();
+            }
         }
     }
 
