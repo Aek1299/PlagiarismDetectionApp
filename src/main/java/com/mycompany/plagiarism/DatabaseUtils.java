@@ -33,7 +33,6 @@ public class DatabaseUtils {
      */
 
     public DatabaseUtils(String URI) throws SQLException, ClassNotFoundException {
-     //   String postgresMode = ";MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE";
         connection = getConnection(URI);
     }
 
@@ -54,6 +53,8 @@ public class DatabaseUtils {
 
         return connection;
     }
+
+
 
 
     /**
@@ -89,11 +90,11 @@ public class DatabaseUtils {
         String insertStudentSQL = "INSERT INTO students" +
                 "  (full_name, group_number) VALUES " +
                 " (?, ?);";
-        PreparedStatement preparedStatement = connection.prepareStatement(insertStudentSQL);
-        preparedStatement.setString(1, name);
-        preparedStatement.setString(2, group);
-        preparedStatement.executeUpdate();
-
+        try(PreparedStatement preparedStatement = connection.prepareStatement(insertStudentSQL)) {
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, group);
+            preparedStatement.executeUpdate();
+        }
     }
 
 
@@ -107,8 +108,9 @@ public class DatabaseUtils {
     public void removeStudent(String name, String group) throws SQLException {
         String quot = "'";
         String deleteStudentSQL = "DELETE FROM students WHERE full_name ="+quot+name+quot +" AND group_number = "+group+";";
-        Statement statement = connection.createStatement();
-        statement.execute(deleteStudentSQL);
+        try(Statement statement = connection.createStatement()) {
+            statement.execute(deleteStudentSQL);
+        }
     }
 
 
@@ -123,10 +125,11 @@ public class DatabaseUtils {
         String insertStudentSQL = "INSERT INTO tasks" +
                 "  (title, language) VALUES " +
                 " (?, ?);";
-        PreparedStatement preparedStatement = connection.prepareStatement(insertStudentSQL);
-        preparedStatement.setString(1, title);
-        preparedStatement.setString(2, lang);
-        preparedStatement.executeUpdate();
+        try(PreparedStatement preparedStatement = connection.prepareStatement(insertStudentSQL)){
+            preparedStatement.setString(1, title);
+            preparedStatement.setString(2, lang);
+            preparedStatement.executeUpdate();
+        }
     }
 
 
@@ -139,9 +142,9 @@ public class DatabaseUtils {
     public void removeTask(String title) throws SQLException {
         String quot = "'";
         String deleteStudentSQL = "DELETE FROM tasks WHERE title ="+quot+title+quot+";";
-
-        Statement statement = connection.createStatement();
-        statement.execute(deleteStudentSQL);
+        try(Statement statement = connection.createStatement()) {
+            statement.execute(deleteStudentSQL);
+        }
 
     }
 
@@ -167,14 +170,15 @@ public class DatabaseUtils {
                 "WHERE student_id = (SELECT student_id FROM info_table) " +
                 "AND task_id = (SELECT task_id FROM info_table);";
 
-        PreparedStatement preparedStatement = connection.prepareStatement(addSolutionSQL);
+        try(PreparedStatement preparedStatement = connection.prepareStatement(addSolutionSQL)) {
 
-        preparedStatement.setString(1, studentName);
-        preparedStatement.setString(2, group);
-        preparedStatement.setString(3, task);
-        preparedStatement.setString(4, solution);
+            preparedStatement.setString(1, studentName);
+            preparedStatement.setString(2, group);
+            preparedStatement.setString(3, task);
+            preparedStatement.setString(4, solution);
 
-        preparedStatement.executeUpdate();
+            preparedStatement.executeUpdate();
+        }
     }
 
 
@@ -192,30 +196,29 @@ public class DatabaseUtils {
         else{
             query = "SELECT * FROM solutions WHERE processed IS NOT NULL AND task_id = "+taskId+" ORDER BY processed";
         }
-        Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        //Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-        resultSet.next();
-        while (!resultSet.isAfterLast()){
-            if(resultSet.getBoolean("processed")) resultSet.next();
-            else taskProcessing(resultSet);
-        }
-
-        if(taskId==-1){
-            Integer[] tasks = getTasksId();
-            for (Integer i:
-                 tasks) {
-                assignClusters(i, threshold);
+        try(Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY)) {
+            ResultSet resultSet = statement.executeQuery(query);
+            resultSet.next();
+            while (!resultSet.isAfterLast()) {
+                if (resultSet.getBoolean("processed")) resultSet.next();
+                else taskProcessing(resultSet);
             }
-        }
-        else{
-            assignClusters(taskId, threshold);
-        }
 
-        String statusesUpdate = "UPDATE SOLUTIONS SET " +
-                "processed = true WHERE solution IS NOT NULL";
-        statement.executeUpdate(statusesUpdate);
+            if (taskId == -1) {
+                Integer[] tasks = getTasksId();
+                for (Integer i :
+                        tasks) {
+                    assignClusters(i, threshold);
+                }
+            } else {
+                assignClusters(taskId, threshold);
+            }
 
+            String statusesUpdate = "UPDATE SOLUTIONS SET " +
+                    "processed = true WHERE solution IS NOT NULL";
+            statement.executeUpdate(statusesUpdate);
+        }
     }
 
 
@@ -278,40 +281,40 @@ public class DatabaseUtils {
     public int[][] getCorrelationMatrix(int task_id) throws SQLException {
         String query = "SELECT student1_id, student2_id, result FROM comparison_results WHERE task_id = "+task_id+" " +
                 "ORDER BY student1_id, student2_id";
-        Statement statement = connection.createStatement();
-        ResultSet rs = statement.executeQuery(query);
-        ArrayList<ArrayList<Integer>> result = new ArrayList<>();
-        rs.next();
-        int id1 = rs.getInt("student1_id");
-        int i = 0;
-        result.add(new ArrayList<>());
-
-        while(!rs.isAfterLast()){
-            result.get(i).add(rs.getInt("result"));
+        try(Statement statement = connection.createStatement()) {
+            ResultSet rs = statement.executeQuery(query);
+            ArrayList<ArrayList<Integer>> result = new ArrayList<>();
             rs.next();
-            if(!rs.isAfterLast() && id1!=rs.getInt("student1_id")){
-                id1 = rs.getInt("student1_id");
+            int id1 = rs.getInt("student1_id");
+            int i = 0;
+            result.add(new ArrayList<>());
 
-                result.add(new ArrayList<>());
-                i++;
+            while (!rs.isAfterLast()) {
+                result.get(i).add(rs.getInt("result"));
+                rs.next();
+                if (!rs.isAfterLast() && id1 != rs.getInt("student1_id")) {
+                    id1 = rs.getInt("student1_id");
+
+                    result.add(new ArrayList<>());
+                    i++;
+                }
             }
-        }
-        int[][] resultArr = new int[result.size()][result.size()];
-        for(i = 0; i<result.size(); i++){
-            for(int j = 0; j<result.size()-1; j++){
-                if(i==j){
-                    resultArr[i][j]=0;
-                    for(int k = j;k<result.size()-1;k++){
-                        resultArr[i][k+1]=result.get(i).get(k);
+            int[][] resultArr = new int[result.size()][result.size()];
+            for (i = 0; i < result.size(); i++) {
+                for (int j = 0; j < result.size() - 1; j++) {
+                    if (i == j) {
+                        resultArr[i][j] = 0;
+                        for (int k = j; k < result.size() - 1; k++) {
+                            resultArr[i][k + 1] = result.get(i).get(k);
+                        }
+                        break;
+                    } else {
+                        resultArr[i][j] = result.get(i).get(j);
                     }
-                    break;
-                }
-                else{
-                    resultArr[i][j] = result.get(i).get(j);
                 }
             }
+            return resultArr;
         }
-        return resultArr;
     }
 
 
@@ -324,10 +327,11 @@ public class DatabaseUtils {
 
     private String getTaskLanguage(int task_id) throws SQLException {
         String query = "SELECT language FROM TASKS WHERE ID = "+task_id;
-        Statement statement = connection.createStatement();
-        ResultSet rs = statement.executeQuery(query);
-        rs.next();
-        return rs.getString("language");
+        try(Statement statement = connection.createStatement()) {
+            ResultSet rs = statement.executeQuery(query);
+            rs.next();
+            return rs.getString("language");
+        }
     }
 
 
@@ -343,15 +347,16 @@ public class DatabaseUtils {
     private void insertComparisonResult(int taskId, int studentId1, int studentId2, int result) throws SQLException {
         String insertResult = "MERGE INTO comparison_results KEY (task_id, student1_id, student2_id) " +
                 "VALUES ( ?, ?, ?, ?)";
-        PreparedStatement preparedStatement = connection.prepareStatement(insertResult);
-        preparedStatement.setInt(1, taskId);
-        preparedStatement.setInt(2, studentId1);
-        preparedStatement.setInt(3, studentId2);
-        preparedStatement.setInt(4, result);
-        preparedStatement.executeUpdate();
-        preparedStatement.setInt(3, studentId1);
-        preparedStatement.setInt(2, studentId2);
-        preparedStatement.executeUpdate();
+        try(PreparedStatement preparedStatement = connection.prepareStatement(insertResult)) {
+            preparedStatement.setInt(1, taskId);
+            preparedStatement.setInt(2, studentId1);
+            preparedStatement.setInt(3, studentId2);
+            preparedStatement.setInt(4, result);
+            preparedStatement.executeUpdate();
+            preparedStatement.setInt(3, studentId1);
+            preparedStatement.setInt(2, studentId2);
+            preparedStatement.executeUpdate();
+        }
     }
 
 
@@ -364,14 +369,16 @@ public class DatabaseUtils {
     public HashMap<String, Integer> getTasks() throws SQLException {
 
         String query = "SELECT title, id FROM tasks";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-        HashMap<String, Integer> tasks = new HashMap<>();
-        while(resultSet.next()){
-            tasks.put(resultSet.getString("title"), resultSet.getInt("id"));
-        }
 
-        return tasks;
+        try(Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(query);
+            HashMap<String, Integer> tasks = new HashMap<>();
+            while (resultSet.next()) {
+                tasks.put(resultSet.getString("title"), resultSet.getInt("id"));
+            }
+
+            return tasks;
+        }
     }
 
 
@@ -384,14 +391,15 @@ public class DatabaseUtils {
     public Integer[] getTasksId() throws SQLException {
         Integer[] tasks;
         String query = "SELECT id FROM tasks";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-        ArrayList<Integer> listOfTasks = new ArrayList<>(10);
-        while(resultSet.next()){
-            listOfTasks.add(resultSet.getInt("id"));
+        try(Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(query);
+            ArrayList<Integer> listOfTasks = new ArrayList<>(10);
+            while (resultSet.next()) {
+                listOfTasks.add(resultSet.getInt("id"));
+            }
+            tasks = listOfTasks.toArray(new Integer[0]);
+            return tasks;
         }
-        tasks = listOfTasks.toArray(new Integer[0]);
-        return tasks;
     }
 
 
@@ -404,14 +412,15 @@ public class DatabaseUtils {
     public ArrayList<String> getGroups() throws SQLException {
         ArrayList<String> groups = new ArrayList<>();
         String query = "SELECT group_number FROM students GROUP BY group_number";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
+        try(Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(query);
 
-        while(resultSet.next()){
-            groups.add(resultSet.getString("group_number"));
+            while (resultSet.next()) {
+                groups.add(resultSet.getString("group_number"));
+            }
+
+            return groups;
         }
-
-        return groups;
     }
 
 
@@ -426,13 +435,14 @@ public class DatabaseUtils {
         ArrayList<Integer> students = new ArrayList<>();
         String query = "SELECT student1_id FROM COMPARISON_RESULTS WHERE task_id = ? GROUP BY student1_id ORDER BY " +
                 "student1_id";
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setInt(1, taskId);
-        ResultSet resultSet = statement.executeQuery();
-        while(resultSet.next()){
-            students.add(resultSet.getInt("student1_id"));
+        try(PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, taskId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                students.add(resultSet.getInt("student1_id"));
+            }
+            return students;
         }
-        return students;
     }
 
 
@@ -480,19 +490,19 @@ public class DatabaseUtils {
 
     private void addCluster(ArrayList<Integer> cluster, int taskId, int clusterNumber) throws SQLException {
         String addCluster = "MERGE INTO clusters (TASK_ID, STUDENT_ID, CLUSTER_NUMBER) VALUES (?, ?, ?)";
-        PreparedStatement statement = connection.prepareStatement(addCluster);
-        if(cluster.size()==1){
-            statement.setInt(1, taskId);
-            statement.setInt(2, cluster.get(0));
-            statement.setInt(3, 0);
-            statement.executeUpdate();
-        }
-        else if(cluster.size()>1){
-            statement.setInt(1, taskId);
-            statement.setInt(3, clusterNumber);
-            for (Integer integer : cluster) {
-                statement.setInt(2, integer);
+        try(PreparedStatement statement = connection.prepareStatement(addCluster)) {
+            if (cluster.size() == 1) {
+                statement.setInt(1, taskId);
+                statement.setInt(2, cluster.get(0));
+                statement.setInt(3, 0);
                 statement.executeUpdate();
+            } else if (cluster.size() > 1) {
+                statement.setInt(1, taskId);
+                statement.setInt(3, clusterNumber);
+                for (Integer integer : cluster) {
+                    statement.setInt(2, integer);
+                    statement.executeUpdate();
+                }
             }
         }
     }
@@ -558,32 +568,33 @@ public class DatabaseUtils {
                 "students.id = s.student_id LEFT JOIN " +
                 "clusters c on students.id = c.student_id AND s.task_id = c.task_id WHERE group_number = ?" +
                 " AND s.task_id = ?";
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setInt(2, task_id);
-        for (String group:
-             groups) {
-            statement.setString(1, group);
-            ArrayList<ExcelWriter.Record> recordsList = new ArrayList<>();
-            ResultSet rs = statement.executeQuery();
-            while(rs.next()){
+        try(PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(2, task_id);
+            for (String group :
+                    groups) {
+                statement.setString(1, group);
+                ArrayList<ExcelWriter.Record> recordsList = new ArrayList<>();
+                ResultSet rs = statement.executeQuery();
+                while (rs.next()) {
 
-                String completed;
-                if(rs.getBoolean("processed")) completed ="да";
-                else completed = "нет";
+                    String completed;
+                    if (rs.getBoolean("processed")) completed = "да";
+                    else completed = "нет";
 
-                String cluster = ""+ rs.getInt("cluster_number");
-                if(cluster.equals("0")) cluster = "нет";
+                    String cluster = "" + rs.getInt("cluster_number");
+                    if (cluster.equals("0")) cluster = "нет";
 
-                String successfully;
-                if(completed.equals("да")&&cluster.equals("нет")) successfully ="да";
-                else successfully = "нет";
+                    String successfully;
+                    if (completed.equals("да") && cluster.equals("нет")) successfully = "да";
+                    else successfully = "нет";
 
-                recordsList.add(new ExcelWriter.Record(rs.getString("full_name"),completed,
-                        cluster, successfully));
+                    recordsList.add(new ExcelWriter.Record(rs.getString("full_name"), completed,
+                            cluster, successfully));
+                }
+                records.add(recordsList);
             }
-            records.add(recordsList);
+            return records;
         }
-        return records;
     }
 
 
@@ -598,20 +609,21 @@ public class DatabaseUtils {
         ArrayList<ArrayList<String>> clusters = new ArrayList<>();
         String query = "SELECT students.full_name, group_number, c.cluster_number FROM students JOIN clusters c " +
                 "ON students.id = c.student_id WHERE c.cluster_number <> 0 AND c.task_id = ? ORDER BY c.cluster_number";
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setInt(1, task_id);
-        ResultSet rs = statement.executeQuery();
-        int i = 0;
-        while(rs.next()){
-            if(rs.getInt("cluster_number")>i){
-                i +=1;
-                clusters.add(new ArrayList<>());
-                clusters.get(i-1).add(Integer.toString(i));
+        try(PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, task_id);
+            ResultSet rs = statement.executeQuery();
+            int i = 0;
+            while (rs.next()) {
+                if (rs.getInt("cluster_number") > i) {
+                    i += 1;
+                    clusters.add(new ArrayList<>());
+                    clusters.get(i - 1).add(Integer.toString(i));
+                }
+                clusters.get(i - 1).add(rs.getString("full_name") + " (" + rs.getString("group_number") + ")");
             }
-            clusters.get(i-1).add(rs.getString("full_name")+" ("+rs.getString("group_number")+")");
-        }
 
-        return clusters;
+            return clusters;
+        }
     }
 
 
@@ -626,13 +638,14 @@ public class DatabaseUtils {
         String query = "WITH si as (SELECT student1_id FROM comparison_results WHERE task_id = "+task_id+" " +
                 "GROUP BY student1_id) SELECT s.full_name, group_number FROM students s JOIN si ON " +
                 "s.id = si.student1_id ORDER BY si.student1_id";
-        Statement statement = connection.createStatement();
-        ResultSet rs = statement.executeQuery(query);
-        ArrayList<String> students = new ArrayList<>();
-        while(rs.next()){
-            students.add(rs.getString("full_name")+" ("+rs.getString("group_number")+")");
+        try(Statement statement = connection.createStatement()) {
+            ResultSet rs = statement.executeQuery(query);
+            ArrayList<String> students = new ArrayList<>();
+            while (rs.next()) {
+                students.add(rs.getString("full_name") + " (" + rs.getString("group_number") + ")");
+            }
+            return students;
         }
-        return students;
     }
 
 
@@ -650,60 +663,58 @@ public class DatabaseUtils {
                 "PRIMARY KEY(full_name, group_number)" +
                 ");";
 
-        Statement statement = connection.createStatement();
-        statement.execute(createTableSQL);
-        createTableSQL = "CREATE TABLE tasks" +
-                "(" +
-                "id int auto_increment," +
-                "title varchar(15)," +
-                "language varchar(10) NOT NULL," +
-//                "comparison_result ARRAY," +
-//                "clusters ARRAY," +
-//                "adjacency_matrix ARRAY," +
-                "PRIMARY KEY(title)," +
-                "CHECK (language IN('Java','C++'))" +
-                ");";
-        statement.execute(createTableSQL);
+        try(Statement statement = connection.createStatement()) {
+            statement.execute(createTableSQL);
+            createTableSQL = "CREATE TABLE tasks" +
+                    "(" +
+                    "id int auto_increment," +
+                    "title varchar(15)," +
+                    "language varchar(10) NOT NULL," +
+                    "PRIMARY KEY(title)," +
+                    "CHECK (language IN('Java','C++'))" +
+                    ");";
+            statement.execute(createTableSQL);
 
-        createTableSQL = "CREATE TABLE solutions" +
-                "(" +
-                "student_id int REFERENCES students(id) ON DELETE CASCADE," +
-                "task_id int REFERENCES tasks(id) ON DELETE CASCADE," +
-                "solution text," +
-                "processed boolean," +
-                "PRIMARY KEY (student_id, task_id)" +
-                ");" ;
+            createTableSQL = "CREATE TABLE solutions" +
+                    "(" +
+                    "student_id int REFERENCES students(id) ON DELETE CASCADE," +
+                    "task_id int REFERENCES tasks(id) ON DELETE CASCADE," +
+                    "solution text," +
+                    "processed boolean," +
+                    "PRIMARY KEY (student_id, task_id)" +
+                    ");";
 
-        statement.execute(createTableSQL);
+            statement.execute(createTableSQL);
 
-        createTableSQL = "CREATE TABLE comparison_results" +
-                "(" +
-                "task_id int REFERENCES tasks(id) ON DELETE CASCADE," +
-                "student1_id int REFERENCES students(id) ON DELETE CASCADE," +
-                "student2_id int REFERENCES students(id) ON DELETE CASCADE," +
-                "result int NOT NULL," +
-                "PRIMARY KEY (task_id, student1_id, student2_id)" +
-                ");";
+            createTableSQL = "CREATE TABLE comparison_results" +
+                    "(" +
+                    "task_id int REFERENCES tasks(id) ON DELETE CASCADE," +
+                    "student1_id int REFERENCES students(id) ON DELETE CASCADE," +
+                    "student2_id int REFERENCES students(id) ON DELETE CASCADE," +
+                    "result int NOT NULL," +
+                    "PRIMARY KEY (task_id, student1_id, student2_id)" +
+                    ");";
 
-        statement.execute(createTableSQL);
+            statement.execute(createTableSQL);
 
-        createTableSQL = "CREATE TABLE clusters" +
-                "(" +
-                "task_id int REFERENCES tasks(id) ON DELETE CASCADE," +
-                "student_id int REFERENCES students(id) ON DELETE CASCADE," +
-                "cluster_number int NOT NULL," +
-                "PRIMARY KEY (task_id, student_id)" +
-                ");";
+            createTableSQL = "CREATE TABLE clusters" +
+                    "(" +
+                    "task_id int REFERENCES tasks(id) ON DELETE CASCADE," +
+                    "student_id int REFERENCES students(id) ON DELETE CASCADE," +
+                    "cluster_number int NOT NULL," +
+                    "PRIMARY KEY (task_id, student_id)" +
+                    ");";
 
-        statement.execute(createTableSQL);
+            statement.execute(createTableSQL);
 
-        String createTriggerSQL = "CREATE TRIGGER add_students AFTER INSERT ON students FOR EACH ROW CALL" +
-                " \"com.mycompany.plagiarism.TriggerAddingStudent\"";
-        statement.execute(createTriggerSQL);
+            String createTriggerSQL = "CREATE TRIGGER add_students AFTER INSERT ON students FOR EACH ROW CALL" +
+                    " \"com.mycompany.plagiarism.TriggerAddingStudent\"";
+            statement.execute(createTriggerSQL);
 
-        createTriggerSQL = "CREATE TRIGGER add_tasks AFTER INSERT ON tasks FOR EACH ROW CALL" +
-                " \"com.mycompany.plagiarism.TriggerAddingTask\"";
-        statement.execute(createTriggerSQL);
+            createTriggerSQL = "CREATE TRIGGER add_tasks AFTER INSERT ON tasks FOR EACH ROW CALL" +
+                    " \"com.mycompany.plagiarism.TriggerAddingTask\"";
+            statement.execute(createTriggerSQL);
+        }
     }
 
 
