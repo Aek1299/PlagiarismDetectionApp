@@ -27,9 +27,9 @@ public class MainMenu extends JFrame {
         super("Plagiarism Detection App v1.0");
 
         Properties properties = new Properties();
-        try {
-            properties.load(new InputStreamReader(new FileInputStream("config.properties"),
-                    StandardCharsets.UTF_8));
+        try (FileInputStream fis = new FileInputStream("config.properties");
+        InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8)){
+            properties.load(isr);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null,"Ошибка загрузки config.properties",
                     "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
@@ -78,9 +78,11 @@ public class MainMenu extends JFrame {
         }
 
         if (flag) {
-            try {
-                properties.store(new OutputStreamWriter(new FileOutputStream("config.properties"),
-                        StandardCharsets.UTF_8),null);
+            try(FileOutputStream fos = new FileOutputStream("config.properties");
+                OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8)){
+
+                properties.store(osw, null);
+
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null,"Ошибка сохранения config.properties",
                         "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
@@ -111,13 +113,6 @@ public class MainMenu extends JFrame {
         });
         btn1.setFocusPainted(false);
         add(btn1);
-
-//        JButton btn2 = new JButton("Продолжить работу с раннее созданной");
-//        btn2.setBounds(75, 160, 300, 40);
-//        btn2.addActionListener(e->{
-//            System.exit(0);
-//        });
-//        add(btn2);
 
 
         JButton btn3 = new JButton("Настройки");
