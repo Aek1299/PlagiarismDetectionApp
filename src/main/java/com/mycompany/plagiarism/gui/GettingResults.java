@@ -78,8 +78,7 @@ public class GettingResults extends JFrame {
             // "включаем" GlassPane
             getGlassPane().setVisible(true);
             // "отключаем" компоненты
-            doEnableDisable(this); // f - ссылка на JFrame/JDialog
-            // запуск "процесса"
+            doEnableDisable(this);
             Container cont = this;
             new SwingWorker() {
                 @Override
@@ -95,6 +94,8 @@ public class GettingResults extends JFrame {
                         JOptionPane.showMessageDialog(null,"Ошибка при работе с базой данных",
                                 "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
                         throwables.printStackTrace();
+                        getGlassPane().setVisible(false);
+                        doEnableDisable(cont);
                     }
                     return null;
                 }
