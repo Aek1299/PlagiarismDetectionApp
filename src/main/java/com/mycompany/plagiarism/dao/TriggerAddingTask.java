@@ -1,4 +1,4 @@
-package com.mycompany.plagiarism;
+package com.mycompany.plagiarism.dao;
 
 import org.h2.api.Trigger;
 
@@ -6,12 +6,12 @@ import java.sql.*;
 
 
 /**
- * Класс триггера, срабатывающего при добавлении студента в базу данных.
+ * Класс триггера, срабатывающего при добавлении задания в базу данных.
  * @author Aleksandr Karetnikov
  * @version 1.0
  */
 
-public class TriggerAddingStudent implements Trigger {
+public class TriggerAddingTask implements Trigger {
 
     @Override
     public void init(Connection conn, String schemaName,
@@ -21,16 +21,16 @@ public class TriggerAddingStudent implements Trigger {
     @Override
     public void fire(Connection conn, Object[] oldRow, Object[] newRow)
             throws SQLException {
-        String querySQL = "SELECT id FROM tasks;";
+        String querySQL = "SELECT id FROM students;";
         try(Statement statement = conn.createStatement()) {
             ResultSet resultSet = statement.executeQuery(querySQL);
             PreparedStatement preparedStatement = conn.prepareStatement("INSERT INTO solutions (student_id, task_id, " +
                     "solution, processed) " +
                     "VALUES (?, ?, NULL, NULL)");
-            preparedStatement.setObject(1, newRow[2]);
+            preparedStatement.setObject(2, newRow[0]);
             while (resultSet.next()) {
-                int taskId = resultSet.getInt("id");
-                preparedStatement.setInt(2, taskId);
+                int studentId = resultSet.getInt("id");
+                preparedStatement.setInt(1, studentId);
                 preparedStatement.executeUpdate();
             }
         }
@@ -42,4 +42,5 @@ public class TriggerAddingStudent implements Trigger {
     @Override
     public void remove() throws SQLException {}
 }
+
 

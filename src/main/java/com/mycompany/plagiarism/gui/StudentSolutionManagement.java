@@ -1,7 +1,7 @@
 package com.mycompany.plagiarism.gui;
 
 
-import com.mycompany.plagiarism.DatabaseUtils;
+import com.mycompany.plagiarism.dao.DatabaseUtils;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.filechooser.FileFilter;

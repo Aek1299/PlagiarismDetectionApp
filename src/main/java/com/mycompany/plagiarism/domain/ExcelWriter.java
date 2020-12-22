@@ -1,5 +1,6 @@
-package com.mycompany.plagiarism;
+package com.mycompany.plagiarism.domain;
 
+import com.mycompany.plagiarism.dao.DatabaseUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;

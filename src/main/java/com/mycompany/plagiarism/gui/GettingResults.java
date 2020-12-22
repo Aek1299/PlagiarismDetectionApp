@@ -1,7 +1,7 @@
 package com.mycompany.plagiarism.gui;
 
-import com.mycompany.plagiarism.DatabaseUtils;
-import com.mycompany.plagiarism.ExcelWriter;
+import com.mycompany.plagiarism.dao.DatabaseUtils;
+import com.mycompany.plagiarism.domain.ExcelWriter;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class GettingResults extends JFrame {
      * Конструктор - создание и отображение графического окна получения результатов.
      * @param databaseUtils  объект для взаимодействия с базой доанных;
      * @param properties  свойства, задаваемые пользователем.
-     * @see com.mycompany.plagiarism.DatabaseUtils
+     * @see DatabaseUtils
      * @see SettingsMenu
      */
 

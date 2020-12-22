@@ -1,5 +1,7 @@
-package com.mycompany.plagiarism;
+package com.mycompany.plagiarism.dao;
 
+import com.mycompany.plagiarism.domain.Algorithms;
+import com.mycompany.plagiarism.domain.ExcelWriter;
 import org.antlr.v4.runtime.*;
 import com.antlr.Java9.*;
 import com.antlr.CPP14.*;
