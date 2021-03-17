@@ -1,6 +1,5 @@
 package com.mycompany.plagiarism.gui;
 
-import com.mycompany.plagiarism.dao.DatabaseUtils;
 import javax.swing.*;
 import java.util.Properties;
 
@@ -20,11 +19,10 @@ public class DatabaseManagement extends JFrame {
 
     /**
      * Конструктор - создание и отображение графического окна для управления выбранной базой данных.
-     * @param databaseUtils объект для взаимодействия с выбранной базой данных.
      * @param properties свойства, заданные пользователем.
      */
 
-    public DatabaseManagement(DatabaseUtils databaseUtils, Properties properties){
+    public DatabaseManagement(Properties properties){
         super("Управление БД");
         setBounds(0, 0, 450, 400);
         setResizable(false);
@@ -39,7 +37,7 @@ public class DatabaseManagement extends JFrame {
         btn1.setBounds(75, indent, 300, 40);
         btn1.addActionListener(e->{
             dispose();
-            new StudentsManagement(databaseUtils, properties);
+            new StudentsManagement(properties);
         });
         btn1.setFocusPainted(false);
         add(btn1);
@@ -48,7 +46,7 @@ public class DatabaseManagement extends JFrame {
         btn2.setBounds(75, indent+60, 300, 40);
         btn2.addActionListener(e->{
             dispose();
-            new TasksManagement(databaseUtils, properties);
+            new TasksManagement(properties);
         });
         add(btn2);
 
@@ -56,7 +54,7 @@ public class DatabaseManagement extends JFrame {
         btn4.setBounds(75, indent+60*2, 300, 40);
         btn4.addActionListener(e->{
             dispose();
-            new StudentSolutionManagement(databaseUtils, properties);
+            new StudentSolutionManagement(properties);
         });
         add(btn4);
 
@@ -64,7 +62,7 @@ public class DatabaseManagement extends JFrame {
         btn5.setBounds(75, indent+60*3, 300, 40);
         btn5.addActionListener(e->{
             dispose();
-            new GettingResults(databaseUtils, properties);
+            new GettingResults(properties);
         });
         add(btn5);
 

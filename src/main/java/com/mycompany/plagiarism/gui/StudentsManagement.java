@@ -1,6 +1,6 @@
 package com.mycompany.plagiarism.gui;
 
-import com.mycompany.plagiarism.dao.DatabaseUtils;
+import com.mycompany.plagiarism.service.Dispatcher;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -21,12 +21,12 @@ public class StudentsManagement extends JFrame {
 
     /**
      * Конструктор - созданиие и отображение графического окна для управления списком студентов.
-     * @param databaseUtils объект для взаимодействия с выбранной базой данных.
      * @param properties свойства, заданные пользователем.
      */
 
-    public StudentsManagement(DatabaseUtils databaseUtils, Properties properties){
+    public StudentsManagement(Properties properties){
         super("Управление списком студентов");
+        Dispatcher dispatcher = new Dispatcher();
         setBounds(0, 0, 450, 295);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
@@ -61,17 +61,7 @@ public class StudentsManagement extends JFrame {
         buttonUserSelection.addActionListener(e->{
             JFileChooser chooserDatabase = new JFileChooser(properties.getProperty("WorkDirectoryURL"));
             chooserDatabase.setFileSelectionMode(JFileChooser.FILES_ONLY);
-//            chooserDatabase.setFileFilter(new FileFilter() {
-//                @Override
-//                public boolean accept(File f) {
-//                    return f.getName().endsWith(".txt");
-//                }
-//
-//                @Override
-//                public String getDescription() {
-//                    return "Текстовые файлы (*.txt)";
-//                }
-//            });
+
 
             int res = chooserDatabase.showDialog(null, "Выберите список");
             if(res!=JFileChooser.APPROVE_OPTION){
@@ -92,7 +82,7 @@ public class StudentsManagement extends JFrame {
         buttonBack.setFocusPainted(false);
         buttonBack.addActionListener(e->{
             dispose();
-            new DatabaseManagement(databaseUtils, properties);
+            new DatabaseManagement(properties);
         });
 
         JButton buttonReset = new JButton("Сбросить");
@@ -120,7 +110,7 @@ public class StudentsManagement extends JFrame {
                     while(str!=null){
                         temp = str.split(" ");
                         for(int i = 0; i< Integer.parseInt(temp[1]);i++){
-                            databaseUtils.addStudent(reader.readLine(), temp[0]);
+                            dispatcher.addStudent(reader.readLine(), temp[0]);
                         }
                         str = reader.readLine();
                     }
@@ -140,7 +130,7 @@ public class StudentsManagement extends JFrame {
             }
             else if(!fieldStudentSelection.getText().equals("")){
                 try {
-                    databaseUtils.addStudent(fieldStudentSelection.getText(),fieldGroupSelection.getText());
+                    dispatcher.addStudent(fieldStudentSelection.getText(),fieldGroupSelection.getText());
                     JOptionPane.showMessageDialog(this,"Добавление завершено успешно!", "Сообщение",
                             JOptionPane.INFORMATION_MESSAGE);
 
@@ -167,7 +157,7 @@ public class StudentsManagement extends JFrame {
                         temp = str.split(" ");
 
                         for(int i = 0; i< Integer.parseInt(temp[1]);i++){
-                            databaseUtils.removeStudent(reader.readLine(), temp[0]);
+                            dispatcher.removeStudent(reader.readLine(), temp[0]);
                         }
                         str = reader.readLine();
 
@@ -187,7 +177,7 @@ public class StudentsManagement extends JFrame {
 
             else if(!fieldStudentSelection.getText().equals("")){
                 try {
-                    databaseUtils.removeStudent(fieldStudentSelection.getText(),fieldGroupSelection.getText());
+                    dispatcher.removeStudent(fieldStudentSelection.getText(),fieldGroupSelection.getText());
                     JOptionPane.showMessageDialog(this,"Удаление завершено успешно!", "Сообщение",
                             JOptionPane.INFORMATION_MESSAGE);
                 } catch (SQLException throwables) {

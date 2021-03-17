@@ -1,6 +1,6 @@
 package com.mycompany.plagiarism.gui;
 
-import com.mycompany.plagiarism.dao.DatabaseUtils;
+import com.mycompany.plagiarism.service.Dispatcher;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -21,12 +21,12 @@ public class TasksManagement extends JFrame {
 
     /**
      * Конструктор - создание и отображение окна для управления списком заданий.
-     * @param databaseUtils объект для взаимодействия с выбранной базой данных.
      * @param properties свойства, заданные пользователем.
      */
 
-    public TasksManagement(DatabaseUtils databaseUtils, Properties properties){
+    public TasksManagement(Properties properties){
         super("Управление списком заданий");
+        Dispatcher dispatcher = new Dispatcher();
         setBounds(0, 0, 450, 295);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
@@ -43,8 +43,6 @@ public class TasksManagement extends JFrame {
         JLabel labelTaskSelection = new JLabel("или введите название задания");
         labelTaskSelection.setBounds(30,90,400,30);
 
-//        JLabel labelFullName = new JLabel("Задание");
-//        labelFullName.setBounds(30,130,40, 30);
 
         JTextField fieldTaskSelection = new JTextField();
         fieldTaskSelection.setBounds(30,130, 245, 30);
@@ -58,25 +56,13 @@ public class TasksManagement extends JFrame {
         languages.setSelectedIndex(0);
 
 
-//        JTextField fieldGroupSelection = new JTextField();
-//        fieldGroupSelection.setBounds(360,130, 50, 30);
 
         JButton buttonUserSelection = new JButton("Выбрать");
         buttonUserSelection.setBounds(310,50,90,30);
         buttonUserSelection.setFocusPainted(false);
         buttonUserSelection.addActionListener(e->{
             JFileChooser chooserDatabase = new JFileChooser(properties.getProperty("WorkDirectoryURL"));
-//            chooserDatabase.setFileFilter(new FileFilter() {
-//                @Override
-//                public boolean accept(File f) {
-//                    return f.getName().endsWith(".txt");
-//                }
-//
-//                @Override
-//                public String getDescription() {
-//                    return "Текстовые файлы (*.txt)";
-//                }
-//            });
+
             chooserDatabase.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
             int res = chooserDatabase.showDialog(null, "Выберите список");
@@ -98,7 +84,7 @@ public class TasksManagement extends JFrame {
         buttonBack.setFocusPainted(false);
         buttonBack.addActionListener(e->{
             dispose();
-            new DatabaseManagement(databaseUtils, properties);
+            new DatabaseManagement(properties);
         });
 
         JButton buttonReset = new JButton("Сбросить");
@@ -125,7 +111,7 @@ public class TasksManagement extends JFrame {
                     while(str!=null){
                         temp = str.split(" ");
                         for(int i = 0; i< Integer.parseInt(temp[1]);i++){
-                            databaseUtils.addTask(reader.readLine(), temp[0]);
+                            dispatcher.addTask(reader.readLine(), temp[0]);
                         }
                         str = reader.readLine();
                     }
@@ -145,7 +131,7 @@ public class TasksManagement extends JFrame {
             }
             else if(!fieldTaskSelection.getText().equals("")){
                 try {
-                    databaseUtils.addTask(fieldTaskSelection.getText(),(String)languages.getSelectedItem());
+                    dispatcher.addTask(fieldTaskSelection.getText(),(String)languages.getSelectedItem());
                     JOptionPane.showMessageDialog(this,"Добавление завершено успешно!", "Сообщение",
                             JOptionPane.INFORMATION_MESSAGE);
                 } catch (SQLException throwables) {
@@ -168,7 +154,7 @@ public class TasksManagement extends JFrame {
                     String str = reader.readLine();
                     while(str!=null){
                         for(int i = 0; i< Integer.parseInt(str);i++){
-                            databaseUtils.removeTask(reader.readLine());
+                            dispatcher.removeTask(reader.readLine());
                         }
                         str = reader.readLine();
 
@@ -187,7 +173,7 @@ public class TasksManagement extends JFrame {
             }
             else if(!fieldTaskSelection.getText().equals("")){
                 try {
-                    databaseUtils.removeTask(fieldTaskSelection.getText());
+                    dispatcher.removeTask(fieldTaskSelection.getText());
                     JOptionPane.showMessageDialog(this,"Удаление завершено успешно!", "Сообщение",
                             JOptionPane.INFORMATION_MESSAGE);
                 } catch (SQLException throwables) {

@@ -1,4 +1,4 @@
-package com.mycompany.plagiarism.domain;
+package com.mycompany.plagiarism.service;
 
 import org.antlr.v4.runtime.Token;
 

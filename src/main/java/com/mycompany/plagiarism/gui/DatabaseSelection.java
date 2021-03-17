@@ -1,6 +1,7 @@
 package com.mycompany.plagiarism.gui;
 
-import com.mycompany.plagiarism.dao.DatabaseUtils;
+import com.mycompany.plagiarism.service.Dispatcher;
+
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.filechooser.FileFilter;
@@ -99,46 +100,24 @@ public class DatabaseSelection extends JFrame {
         buttonContinue.setFocusPainted(false);
         buttonContinue.addActionListener(e->{
             if(!labelUserSelection.getText().equals("")){
-                DatabaseUtils databaseUtils = null;
                 try {
-                    databaseUtils = new DatabaseUtils(databasesDirectory+
-                            System.getProperty("file.separator")+
+                    new Dispatcher().setDatabase(databasesDirectory+File.separator+
                             labelUserSelection.getText().substring(0,labelUserSelection.getText().length()-6));
                 } catch (SQLException throwables) {
                     JOptionPane.showMessageDialog(null,"Ошибка соединения с базой данных",
                             "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
                     throwables.printStackTrace();
                     System.exit(1);
-                } catch (ClassNotFoundException classNotFoundException) {
-                    JOptionPane.showMessageDialog(null,"Ошибка загрузки драйвера базы данных ",
-                            "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
-                    classNotFoundException.printStackTrace();
-                    System.exit(1);
                 }
                 dispose();
-                new DatabaseManagement(databaseUtils, properties);
+                new DatabaseManagement(properties);
             }
 
             else if(!fieldUserSelection.getText().equals("")){
-                DatabaseUtils databaseUtils = null;
 
                 try {
-                    databaseUtils = new DatabaseUtils(databasesDirectory+
-                            System.getProperty("file.separator")+fieldUserSelection.getText());
-                } catch (SQLException throwables) {
-                    JOptionPane.showMessageDialog(null,"Ошибка соединения с базой данных",
-                            "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
-                    throwables.printStackTrace();
-                    System.exit(1);
-                } catch (ClassNotFoundException classNotFoundException) {
-                    JOptionPane.showMessageDialog(null,"Ошибка загрузки драйвера базы данных ",
-                            "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
-                    classNotFoundException.printStackTrace();
-                    System.exit(1);
-                }
-
-                try {
-                    databaseUtils.databaseInitialization();
+                    new Dispatcher().databaseInit(databasesDirectory+File.separator+
+                            fieldUserSelection.getText());
                 } catch (SQLException throwables) {
                     JOptionPane.showMessageDialog(null,"Ошибка инициализации базы данных",
                             "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
@@ -146,7 +125,7 @@ public class DatabaseSelection extends JFrame {
                     System.exit(1);
                 }
                 dispose();
-                new DatabaseManagement(databaseUtils, properties);
+                new DatabaseManagement(properties);
             }
         });
 

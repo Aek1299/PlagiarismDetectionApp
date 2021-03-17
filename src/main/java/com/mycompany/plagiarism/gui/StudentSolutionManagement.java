@@ -1,7 +1,8 @@
 package com.mycompany.plagiarism.gui;
 
 
-import com.mycompany.plagiarism.dao.DatabaseUtils;
+import com.mycompany.plagiarism.service.Dispatcher;
+
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.filechooser.FileFilter;
@@ -28,11 +29,10 @@ public class StudentSolutionManagement extends JFrame {
 
     /**
      * Конструктор - создание и отображение окна для управления студенческими работами-решенями.
-     * @param databaseUtils объект для взаимодействия с выбранной базой данных.
      * @param properties свойства, заданные пользователем.
      */
 
-    public StudentSolutionManagement(DatabaseUtils databaseUtils, Properties properties){
+    public StudentSolutionManagement(Properties properties){
         super("Добавление работ");
         setBounds(0, 0, 450, 200);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -78,7 +78,7 @@ public class StudentSolutionManagement extends JFrame {
         buttonBack.setFocusPainted(false);
         buttonBack.addActionListener(e->{
             dispose();
-            new DatabaseManagement(databaseUtils, properties);
+            new DatabaseManagement(properties);
         });
 
         JButton buttonReset = new JButton("Сбросить");
@@ -125,7 +125,7 @@ public class StudentSolutionManagement extends JFrame {
                                 }
                             }
                             try {
-                                databaseUtils.addSolution(task, studentName, group, solution.toString());
+                                new Dispatcher().addSolution(task, studentName, group, solution.toString());
                             } catch (SQLException throwables) {
                                 JOptionPane.showMessageDialog(null,"Ошибка добавления решения",
                                         "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);

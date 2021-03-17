@@ -1,7 +1,10 @@
 package com.mycompany.plagiarism.gui;
 
 import com.mycompany.plagiarism.dao.DatabaseUtils;
-import com.mycompany.plagiarism.domain.ExcelWriter;
+import com.mycompany.plagiarism.service.Dispatcher;
+import com.mycompany.plagiarism.service.ExcelWriter;
+import com.mycompany.plagiarism.service.SolutionsHandler;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -23,13 +26,12 @@ public class GettingResults extends JFrame {
 
     /**
      * Конструктор - создание и отображение графического окна получения результатов.
-     * @param databaseUtils  объект для взаимодействия с базой доанных;
      * @param properties  свойства, задаваемые пользователем.
      * @see DatabaseUtils
      * @see SettingsMenu
      */
 
-    public GettingResults(DatabaseUtils databaseUtils, Properties properties){
+    public GettingResults(Properties properties){
         super("Результаты");
         int middleThreshold = Integer.parseInt(properties.getProperty("MiddleThreshold"));
         int highThreshold = Integer.parseInt(properties.getProperty("HighThreshold"));
@@ -42,7 +44,7 @@ public class GettingResults extends JFrame {
         String[] variants = new String[1];
         HashMap<String,Integer> tasks = null;
         try {
-            tasks = databaseUtils.getTasks();
+            tasks = new Dispatcher().getTasks();
             variants = new String[tasks.keySet().size()+1];
             int i = 1;
             for (String key:
@@ -81,32 +83,33 @@ public class GettingResults extends JFrame {
             doEnableDisable(this);
             Container cont = this;
             new SwingWorker() {
+                private boolean successfulCompletion;
                 @Override
                 protected Object doInBackground() {
                     try {
-                        if(comboBox.getSelectedIndex()==0) databaseUtils.startProcessing(-1, highThreshold);
+                        if(comboBox.getSelectedIndex()==0){
+                            new SolutionsHandler(0, highThreshold);
+                        }
                         else{
-                            databaseUtils.startProcessing(finalTasks.get(finalVariants[comboBox.getSelectedIndex()]),
+                            new SolutionsHandler(finalTasks.get(finalVariants[comboBox.getSelectedIndex()]),
                                     highThreshold);
                         }
-
+                        successfulCompletion = true;
                     } catch (SQLException throwables) {
                         JOptionPane.showMessageDialog(null,"Ошибка при работе с базой данных",
                                 "Уведомление об ошибке", JOptionPane.ERROR_MESSAGE);
                         throwables.printStackTrace();
-                        getGlassPane().setVisible(false);
-                        doEnableDisable(cont);
+                        successfulCompletion = false;
                     }
+
                     return null;
                 }
 
                 @Override
                 protected void done() {
-                    // "отключаем" GlassPane
                     getGlassPane().setVisible(false);
-                    // "включаем" компоненты
                     doEnableDisable(cont);
-                    JOptionPane.showMessageDialog(cont,"Обработка завершена успешно!", "Сообщение",
+                    if(successfulCompletion) JOptionPane.showMessageDialog(cont,"Обработка завершена успешно!", "Сообщение",
                             JOptionPane.INFORMATION_MESSAGE);
                 }
             }.execute();
@@ -122,12 +125,12 @@ public class GettingResults extends JFrame {
                 if((Objects.requireNonNull(comboBox.getSelectedItem())).equals("Все")){
                     for (String key:
                          finalTasks.keySet()) {
-                        ExcelWriter.write(databaseUtils, finalTasks.get(key),
+                        ExcelWriter.write(finalTasks.get(key),
                                 key, middleThreshold, highThreshold, resultsURL);
                     }
                 }
                 else {
-                    ExcelWriter.write(databaseUtils, finalTasks.get(comboBox.getSelectedItem()),
+                    ExcelWriter.write(finalTasks.get(comboBox.getSelectedItem()),
                             (String)comboBox.getSelectedItem(), middleThreshold, highThreshold, resultsURL);
                 }
                 JOptionPane.showMessageDialog(this, "Отчёт выполнен успешно!", "Сообщение",
@@ -146,27 +149,13 @@ public class GettingResults extends JFrame {
         });
         add(btn2);
 
-//        JButton btn4 = new JButton("Получить граф");
-//        btn4.setBounds(75, indent+60*3, 300, 40);
-//        btn4.addActionListener(e->{
-//
-//        });
-//        add(btn4);
-//
-//        JButton btn5 = new JButton("");
-//        btn5.setBounds(75, indent+60*4, 300, 40);
-//        btn5.addActionListener(e->{
-//
-//        });
-//        add(btn5);
-
         JButton btn6 = new JButton("Назад");
         btn6.setBounds( 75, indent+60*3, 300, 40);
 
-        //btn6.setBounds(75, indent+60*5, 300, 40);
+
         btn6.addActionListener(e->{
             dispose();
-            new DatabaseManagement(databaseUtils, properties);
+            new DatabaseManagement(properties);
         });
         add(btn6);
 
